@@ -1,0 +1,108 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, Weather!</h1>
+
+<div class=" p-2 mb-3">
+    <button class="btn btn-success" @onclick=this.SetAsBalmy>Set As Balmy</button>
+    <button class="btn btn-primary" @onclick=this.SetAsCold>Set As Cold</button>
+</div>
+
+<EditForm EditContext=this.editContext>
+
+    <RecordEditContextTracker RecordEditContext=this.recordContext />
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="form-floating mb-3">
+                    <InputDate class="form-control" placeholder="Enter a Date" @bind-Value=this.recordContext.Date />
+                    <label>Date</label>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="form-floating mb-3">
+                    <InputNumber class="form-control" placeholder="enter a temperature" @bind-Value=this.recordContext.TemperatureC />
+                    <label>Temperature &deg;C</label>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="form-floating mb-3">
+                    <InputText class="form-control" placeholder="enter a summary" @bind-Value=this.recordContext.Summary />
+                    <label>Summary</label>
+                </div>
+            </div>
+
+            <div class=" p-2 mb-3 text-end">
+                <button hidden="@(!this.recordContext.IsDirty)" class="btn btn-warning" @onclick=this.Reset>Reset</button>
+                <button disabled="@(!this.recordContext.IsDirty)" class="btn btn-success">Save</button>
+                <button hidden="@(!this.recordContext.IsDirty)" class="btn btn-danger">Exit without Saving</button>
+                <button disabled="@(this.recordContext.IsDirty)" class="btn btn-dark">Exit</button>
+            </div>
+
+        </div>
+    </div>
+
+</EditForm>
+
+<NavigationLock OnBeforeInternalNavigation=this.OnLocationChanging ConfirmExternalNavigation=this.recordContext.IsDirty />
+
+@code {
+    // we set these to default to override the compiler null checking
+    // They must be set before any attempt to render
+    private EditContext editContext = default!;
+    private WeatherForecastEditContext recordContext = default!;
+
+    // create some dummy data
+    private WeatherForecast model = new() { Date = DateOnly.FromDateTime(DateTime.Now), Summary = "Hot", TemperatureC = 25 };
+
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        parameters.SetParameterProperties(this);
+        // Do any initial async data access here
+        // Ensures the contexts are set and have data before any rendering takes place.
+        return base.SetParametersAsync(ParameterView.Empty);
+    }
+
+    protected override void OnInitialized()
+    {
+        // Set these before any rendering takes place
+        recordContext = new WeatherForecastEditContext(model);
+        editContext = new EditContext(recordContext);
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        //Do not do async coding here to populate the edit contexts
+        // I
+        ArgumentNullException.ThrowIfNull(this.editContext);
+        ArgumentNullException.ThrowIfNull(this.recordContext);
+
+        return base.OnInitializedAsync();
+    }
+
+    private void SetAsBalmy()
+    {
+        this.recordContext.Summary = "Balmy";
+        this.recordContext.TemperatureC = 20;
+    }
+
+    private void SetAsCold()
+    {
+        this.recordContext.Summary = "Cold";
+        this.recordContext.TemperatureC = 5;
+    }
+
+    private void Reset()
+        => this.recordContext.Reset();
+
+    private void OnLocationChanging(LocationChangingContext context)
+    {
+        if (this.recordContext.IsDirty)
+            context.PreventNavigation();
+    }
+}
