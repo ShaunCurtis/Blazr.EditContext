@@ -268,8 +268,9 @@ public class RecordEditContextTracker : ComponentBase
 
     protected override Task OnInitializedAsync()
     {
-        //Do not do async coding here to populate the edit contexts
-        // I
+        // Do not do async coding here to populate the edit contexts
+        // If the code yields to an await, the component will render on null references
+        // I've added the null exceptions in here to detect such conditions 
         ArgumentNullException.ThrowIfNull(this.editContext);
         ArgumentNullException.ThrowIfNull(this.recordContext);
 
