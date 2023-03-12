@@ -1,16 +1,18 @@
-The purpose of this repository is to demonstrate how to track state in an edit form whwn using the standard Blazor implementation i.e. `EditContext` and `EditForm`.  The code also demonstrates using the .Net7.0 `NavigationLocker` component to manage navigation.
+The purpose of this repository is to demonstrate a methodology to track state in an edit form when using the standard Blazor implementation i.e. `EditContext` and `EditForm`.  The code also demonstrates using the Net7.0 `NavigationLocker` component to manage navigation.
 
-`EditContext` implements the field state concept to provide rudimentary tracking of individual field state.  `InputBase` components call the `NotifyFieldChanged` method whenever their value changes.  `EditContext` provides an `OnFieldChanged` event, and `IsModified` and `MarkAsModified` methods.
+## Background
 
-However, you would soon hit problems if you used these the detect and manage state on an edit object.  Neither `EditContext` or the individual components track the original state of the `Model`: they only know that a value has changed since the last time it was changed.  You could change the Temperature from 5 to 10 and then back to 5 and the `EditContext` would still believe it was dirty.
+`EditContext` implements the field state to provide rudimentary tracking of individual field state.  `InputBase` components call the `NotifyFieldChanged` method whenever their value changes.  `EditContext` provides an `OnFieldChanged` event, and `IsModified` and `MarkAsModified` methods.
+
+This does not provide true state management on an edit object as neither `EditContext` nor the individual components track the original state of the `Model`: they only know a value has changed (since the last time it was changed).  Temperature could change from 5 to 10 and then back to 5 and the `EditContext` would still believe it was dirty.
 
 ## Tracking State
 
-In order to track atate we need to know what the original state is.  If we're editing our model class then we need to keep a copy of it's initisl state.  Not that easy with classes.
+To track true state, we need to know the original state.  If we edit our model class, we need to keep a copy of it's initial state.  Classes don't make that easy.  There's no built in cloning or equality checking.
 
 ### The Record
 
-The solutiuon is to create a `record` object of our base class.  Here's the `WeatherForecastRecord`.
+The solutiuon is to create a `record` object that represents the data class.  Here's `WeatherForecastRecord`.  It has an empty constructor and one that takes the data class.
 
 ```csharp
 public record WeatherForecastRecord
@@ -37,9 +39,11 @@ var record = new WeatherForecastRecord(new());
 var copy = record with {};
 ```
 
+And equality checks work.
+
 ### The Record Edit Context
 
-This is the *Model*.  It tracks changes to individual properties, manages the state and raising `Actions`.  It creates a record whwn initialized to capture the initial state. 
+This is the *Model* that we use for the `EditContext` and `InputBase` component binds.  It tracks changes to individual properties, manages the state and raising `Actions`.  It creates a internal record when initialized to capture the initial state. 
 
 ```csharp
 public class WeatherForecastEditContext : IRecordEditContext
@@ -132,7 +136,8 @@ public class WeatherForecastEditContext : IRecordEditContext
     }
 }
 ```
-The context implements the `IRecordEditContext` which is used in the components.
+
+The context implements `IRecordEditContext` which is used in the components.
 
 ```csharp
 public interface IRecordEditContext
@@ -146,7 +151,7 @@ public interface IRecordEditContext
 
 ### The RecordEditContextTracker Component
 
-This is the component added within the `EditForm` which hooks up the RecordEditContext with the EditContext.
+This is the component added within the `EditForm`.  It hooks up the RecordEditContext with the EditContext.
 
 ```csharp
 public class RecordEditContextTracker : ComponentBase
@@ -178,7 +183,10 @@ public class RecordEditContextTracker : ComponentBase
 
 ### The Edit Form
 
-The `EditContext` and `RecordEditContext` are set up in `OnInitialized` to ensure they have values before any rendering takes place.
+1. The `EditContext` and `RecordEditContext` are set up in `OnInitialized` to ensure they have values before any rendering takes place.
+2. The button states are governed by the `IsDirty` property in the `RecordEditContext`.
+3. Navigation is controlled by the `NavigationLock` component.
+4. The two buttons demonstrate setting values and the effect on both the `InputBase` component state - change to green to indicate they have been edited.  
 
 ```csharp
 @page "/"
