@@ -299,3 +299,7 @@ public class RecordEditContextTracker : ComponentBase
     }
 }
 ```
+
+## Using a Immutable Data Pipeline
+
+Personally I use an immutable data pipeline based on records.  That sinmplifies the above pattern: `WeatherForecast` is a record, there's no need for `WeatherForecastRecord`. 
