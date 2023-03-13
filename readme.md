@@ -1,14 +1,14 @@
-The purpose of this repository is to demonstrate a methodology to track state in an edit form when using the standard Blazor implementation i.e. `EditContext` and `EditForm`.  The code also demonstrates using the Net7.0 `NavigationLocker` component to manage navigation.
+The purpose of this repository is to demonstrate a set of coding patterns to track state in a standard Blazor Edit context  i.e. `EditContext` and `EditForm`.  The code also demonstrates using the Net7.0 `NavigationLocker` component to lock navigation while the form is in a dirty state.
 
 ## Background
 
 `EditContext` implements the field state to provide rudimentary tracking of individual field state.  `InputBase` components call the `NotifyFieldChanged` method whenever their value changes.  `EditContext` provides an `OnFieldChanged` event, and `IsModified` and `MarkAsModified` methods.
 
-This does not provide true state management on an edit object as neither `EditContext` nor the individual components track the original state of the `Model`: they only know a value has changed (since the last time it was changed).  Temperature could change from 5 to 10 and then back to 5 and the `EditContext` would still believe it was dirty.
+This does not provide true state management.  Neither `EditContext` nor the individual components track the original state of the `Model`: they track change.  Temperature could change from 5 to 10 and then back to 5 and the `EditContext` would still believe it was dirty.
 
 ## Tracking State
 
-To track true state, we need to know the original state.  If we edit our model class, we need to keep a copy of it's initial state.  Classes don't make that easy.  There's no built in cloning or equality checking.
+To track true state, the edit context must save the original state.  If we edit our model class, we need to keep a copy of it's initial state.  Classes don't make that easy.  There's no built in cloning or equality checking.
 
 ### The Record
 
@@ -302,4 +302,4 @@ public class RecordEditContextTracker : ComponentBase
 
 ## Using a Immutable Data Pipeline
 
-Personally I use an immutable data pipeline based on records.  That sinmplifies the above pattern: `WeatherForecast` is a record, there's no need for `WeatherForecastRecord`. 
+Personally I use an immutable data pipeline based on records.  It simplifies the pattern: `WeatherForecast` is a record, there's no need for `WeatherForecastRecord`. 
